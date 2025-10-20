@@ -1,9 +1,9 @@
 package saltandmilk.intefaces.category;
 
-import saltandmilk.dto.response.category.CategoryRespone;
+import saltandmilk.dto.response.category.CategoryResponse;
 
 import java.util.List;
 
-public interface ICategoryInterface {
-    List<CategoryRespone> findAllCategories();
+public interface CategorySerivce {
+    List<CategoryResponse> findAllCategories();
 }
