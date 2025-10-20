@@ -10,11 +10,11 @@ import java.util.Set;
 @NoArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class CategoryRespone {
+public class CategoryResponse {
     int category_id;
     String name;
     String slug;
-    String img_url;
+    String imgUrl;
     Integer parent_category_id;
-    Set<CategoryRespone> children;
+    Set<CategoryResponse> children;
 }
