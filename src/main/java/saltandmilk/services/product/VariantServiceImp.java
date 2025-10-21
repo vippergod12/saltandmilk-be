@@ -22,12 +22,19 @@ public class VariantServiceImp implements VariantService {
 
     @Override
     public List<VariantResponseDto> findAll() {
-        return List.of();
+        List<ProductVariant> list = variantRepository.findAll();
+        return variantMapper.toListResponseDTO(list);
     }
 
     @Override
     public List<VariantResponseDto> getVariantsByTag(int tagId) {
         List<ProductVariant> list = variantRepository.findVariantsByTagId(tagId);
+        return variantMapper.toListResponseDTO(list);
+    }
+
+    @Override
+    public List<VariantResponseDto> getVariantsByCategoryId(int category_id) {
+        List<ProductVariant> list = variantRepository.findProductVariantByCategoryId(category_id);
         return variantMapper.toListResponseDTO(list);
     }
 }

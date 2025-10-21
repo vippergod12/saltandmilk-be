@@ -22,4 +22,16 @@ public class VariantController {
         var variants = variantService.getVariantsByTag(tagId);
         return ApiResp.<List<VariantResponseDto>>builder().result(variants).build();
     }
+
+    @GetMapping("/all")
+    ApiResp<List<VariantResponseDto>>getAll(){
+        var result = variantService.findAll();
+        return ApiResp.<List<VariantResponseDto>>builder().result(result).build();
+    }
+
+    @GetMapping("/get-by-cate")
+    ApiResp<List<VariantResponseDto>> getVariantsByCategoryId(@RequestParam(name = "category_id") int category_id) {
+        var result = variantService.getVariantsByCategoryId(category_id);
+        return ApiResp.<List<VariantResponseDto>>builder().result(result).build();
+    }
 }

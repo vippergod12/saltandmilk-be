@@ -19,4 +19,12 @@ public interface VariantRepository extends JpaRepository<ProductVariant, UUID> {
     WHERE t.tag_id = :tagId
 """)
 List<ProductVariant> findVariantsByTagId(@Param("tagId") int tagId);
+
+@Query("""
+    SELECT pv FROM ProductVariant pv
+    JOIN pv.product p
+    JOIN p.category c
+    WHERE c.category_id = :category_id
+""")
+List<ProductVariant> findProductVariantByCategoryId(@Param("category_id") int category_id);
 }
