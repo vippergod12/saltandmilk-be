@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -21,6 +22,11 @@ public class ProductVariant {
     UUID variantId;
 
     String sku;
+
+    @Column(name="created_at")
+    LocalDateTime createdAt;
+    @Column(name="updated_at")
+    LocalDateTime updatedAt;
 
     @Column(name="stock_quantity")
     int stockQuantity;

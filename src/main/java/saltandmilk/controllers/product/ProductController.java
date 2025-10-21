@@ -22,4 +22,10 @@ public class ProductController {
         var result = _productService.getProductsByTab(tabId);
         return ApiResp.<List<ProductResponseDto>>builder().result(result).build();
     }
+
+    @GetMapping("/products/getAll")
+    ApiResp<List<ProductResponseDto>> getAll(){
+        var result = _productService.findAll();
+        return ApiResp.<List<ProductResponseDto>>builder().result(result).build();
+    }
 }

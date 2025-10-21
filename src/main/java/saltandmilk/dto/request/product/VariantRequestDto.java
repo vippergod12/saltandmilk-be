@@ -3,6 +3,7 @@ package saltandmilk.dto.request.product;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
@@ -17,7 +18,8 @@ public class VariantRequestDto {
     Double price;
     Double salePrice;
     String imageUrl;
-
+    private LocalDateTime createdAt;
+    LocalDateTime updatedAt;
     UUID productId;  // tham chiếu đến Product cha
     int sizeId;     // optional
     int colorId;    // optional
