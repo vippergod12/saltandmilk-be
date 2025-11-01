@@ -3,6 +3,8 @@ package saltandmilk.services.product;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import saltandmilk.dto.response.product.VariantResponseDto;
 import saltandmilk.entities.product.ProductVariant;
@@ -36,5 +38,12 @@ public class VariantServiceImp implements VariantService {
     public List<VariantResponseDto> getVariantsByCategoryId(int category_id) {
         List<ProductVariant> list = variantRepository.findProductVariantByCategoryId(category_id);
         return variantMapper.toListResponseDTO(list);
+    }
+
+    @Override
+    public List<VariantResponseDto> findSuggestions(String query, int limit) {
+        Pageable pageable = PageRequest.of(0, limit);
+        String likeQuery = "%" + query.toLowerCase() + "%";
+        return variantRepository.searchProductSuggestions(likeQuery, pageable);
     }
 }
