@@ -34,4 +34,11 @@ public class VariantController {
         var result = variantService.getVariantsByCategoryId(category_id);
         return ApiResp.<List<VariantResponseDto>>builder().result(result).build();
     }
+
+    @GetMapping("/search")
+    ApiResp<List<VariantResponseDto>> search(@RequestParam("q") String query,
+                                             @RequestParam(value = "limit", defaultValue = "5") int limit){
+        List<VariantResponseDto> suggestions = variantService.findSuggestions(query,limit);
+        return ApiResp.<List<VariantResponseDto>>builder().result(suggestions).build();
+    }
 }
