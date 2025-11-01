@@ -1,5 +1,6 @@
 package saltandmilk.repositories.product;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -28,7 +29,7 @@ List<ProductVariant> findVariantsByTagId(@Param("tagId") int tagId);
     JOIN p.category c
     WHERE c.category_id = :category_id
 """)
-List<ProductVariant> findProductVariantByCategoryId(@Param("category_id") int category_id);
+Page<ProductVariant> findProductVariantByCategoryId(@Param("category_id") int category_id,  Pageable pageable);
     @Query("""
         SELECT new saltandmilk.dto.response.product.VariantResponseDto(
             pv.variantId,
@@ -53,4 +54,11 @@ List<ProductVariant> findProductVariantByCategoryId(@Param("category_id") int ca
         WHERE (LOWER(p.name) LIKE :query OR LOWER(pv.sku) LIKE :query)
     """)
     List<VariantResponseDto> searchProductSuggestions(@Param("query") String query, Pageable pageable);
+
+    @Query("""
+        SELECT pv FROM ProductVariant pv
+        JOIN pv.product p
+        WHERE p.category.slug = :slug
+    """)
+    Page<ProductVariant> findVariantsByCategorySlug(@Param("slug") String slug, Pageable pageable);
 }

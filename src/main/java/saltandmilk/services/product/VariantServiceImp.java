@@ -3,6 +3,7 @@ package saltandmilk.services.product;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -35,9 +36,10 @@ public class VariantServiceImp implements VariantService {
     }
 
     @Override
-    public List<VariantResponseDto> getVariantsByCategoryId(int category_id) {
-        List<ProductVariant> list = variantRepository.findProductVariantByCategoryId(category_id);
-        return variantMapper.toListResponseDTO(list);
+    public Page<VariantResponseDto> getVariantsByCategoryId(int category_id, int page, int size) {
+        Pageable pageable = PageRequest.of(page,size);
+        Page<ProductVariant> pageResult = variantRepository.findProductVariantByCategoryId(category_id,pageable);
+        return pageResult.map(variantMapper::toResponseDTO);
     }
 
     @Override
@@ -45,5 +47,12 @@ public class VariantServiceImp implements VariantService {
         Pageable pageable = PageRequest.of(0, limit);
         String likeQuery = "%" + query.toLowerCase() + "%";
         return variantRepository.searchProductSuggestions(likeQuery, pageable);
+    }
+
+    @Override
+    public Page<VariantResponseDto> getVariantsByCategorySlug(String slug,int page, int size) {
+        Pageable pageable = PageRequest.of(page,size);
+        Page<ProductVariant> pageResult = variantRepository.findVariantsByCategorySlug(slug, pageable);
+        return pageResult.map(variantMapper::toResponseDTO);
     }
 }
