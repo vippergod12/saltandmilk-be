@@ -1,5 +1,6 @@
 package saltandmilk.dto.response.product;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -25,12 +26,9 @@ public class VariantResponseDto {
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
     private LocalDateTime updatedAt;;
 
-    UUID productId;
-    String productName;
+    private ProductResponseDto product;
 
-    int sizeId;
-    String sizeName;
+    private ColorResponseDto color;
 
-    int colorId;
-    String colorName;
+    private SizeResponseDto size;
 }
