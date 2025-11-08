@@ -13,12 +13,8 @@ import java.util.UUID;
 public interface IUserService {
     List<UserResponseDto> getAllUsers();
 
-    UserResponseDto getUserByEmail(String email);
-
     Page<UserResponseDto> searchUsers (String name, String role, Boolean gender, Boolean status
             , Pageable pageable);
-
-    List<UserResponseDto> getUsersByNameContainingIgnoreCase(String name);
 
     UserResponseDto getUserById(UUID userid);
 
@@ -28,8 +24,5 @@ public interface IUserService {
 
     void changePassword(String username, ChangePasswordRequestDto request);
 
-    UserResponseDto activeAccount(UUID id);
-    UserResponseDto blockedAccount(UUID id);
-
-//    UserStatsDto getUserStats();
+    UserResponseDto getMyInfo();
 }
