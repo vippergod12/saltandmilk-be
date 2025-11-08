@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Mapper(componentModel = "spring", uses = {CategoryMapper.class, TagMapper.class})
+@Mapper(componentModel = "spring", uses = {CategoryMapper.class, TagMapper.class, VariantMapper.class})
 public interface ProductMapper {
     // --- ÁNH XẠ TỪ REQUEST DTO SANG ENTITY ---
     @Mapping(target = "product_id", ignore = true)     // 1. Bỏ qua các trường tự sinh
@@ -22,11 +22,18 @@ public interface ProductMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "variants", ignore = true)
-
     @Mapping(source = "category", target = "category.category_id") // 2. Ánh xạ categoryId -> category.category_id
     @Mapping(source = "tags", target = "tags") // 3. MapStruct sẽ tự động dùng helper `fromId` trong TagMapper
     Product toProduct(ProductRequestDto productRequestDto);
 
+    @Mapping(target = "product_id", source = "product_id") // <-- SỬA LỖI QUAN TRỌNG NHẤT
+    @Mapping(target = "name", source = "name")
+    @Mapping(target = "description", source = "description")
+    @Mapping(target = "basePrice", source = "basePrice")
+//    @Mapping(target = "isPublished", source = "isPublished")
+    @Mapping(target = "category", source = "category")
+    @Mapping(target = "variants", source = "variants") // <-- Ánh xạ danh sách variants
+    @Mapping(target = "tags", source = "tags")
     ProductResponseDto toProductResponseDto(Product product);
 
     List<ProductResponseDto> toProductResponseDto(List<Product> products);

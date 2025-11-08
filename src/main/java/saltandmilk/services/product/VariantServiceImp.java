@@ -46,7 +46,7 @@ public class VariantServiceImp implements VariantService {
     public List<VariantResponseDto> findSuggestions(String query, int limit) {
         Pageable pageable = PageRequest.of(0, limit);
         String likeQuery = "%" + query.toLowerCase() + "%";
-        return variantRepository.searchProductSuggestions(likeQuery, pageable);
+        return variantMapper.toListResponseDTO(variantRepository.searchProductSuggestions(likeQuery, pageable));
     }
 
     @Override
