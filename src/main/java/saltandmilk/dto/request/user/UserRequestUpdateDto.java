@@ -10,6 +10,7 @@ import saltandmilk.entities.user.Role;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserRequestUpdateDto {
+    String username;
     String full_name;
     String password;
     String email;

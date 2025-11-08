@@ -17,13 +17,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import saltandmilk.dto.request.authen.AuthenRequest;
 import saltandmilk.dto.request.authen.IntrospectRequest;
+import saltandmilk.dto.request.authen.LogoutRequest;
+import saltandmilk.dto.request.authen.RefreshRequest;
 import saltandmilk.dto.response.authen.AuthenResponse;
 import saltandmilk.dto.response.authen.IntrospectResponse;
+import saltandmilk.entities.user.InvalidatedToken;
 import saltandmilk.entities.user.Role;
 import saltandmilk.entities.user.User;
 import saltandmilk.exceptions.AppException;
 import saltandmilk.exceptions.ErrorCode;
 import saltandmilk.intefaces.authen.IAuthenticationService;
+import saltandmilk.repositories.user.InvalidatedTokenRepository;
 import saltandmilk.repositories.user.UserRepository;
 
 import java.text.ParseException;
@@ -40,6 +44,15 @@ public class AuthenticationServiceImpl implements IAuthenticationService {
 
     private final UserRepository _userRepository;
 
+    private final InvalidatedTokenRepository invalidatedTokenRepository;
+    @NonFinal
+    @Value("${jwt.valid-duration}")
+    protected long VALID_DURATION;
+
+    @NonFinal
+    @Value("${jwt.refreshable-duration}")
+    protected long REFRESHABLE_DURATION;
+
     @NonFinal
     @Value("${jwt.signerKey}")
     protected String SIGNER_KEY;
@@ -47,7 +60,7 @@ public class AuthenticationServiceImpl implements IAuthenticationService {
     @Override
     public AuthenResponse authenticate(AuthenRequest authenRequest) {
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
-        var user = _userRepository.findByEmail(authenRequest.getEmail()).orElseThrow(() ->
+        var user = _userRepository.findByUsername(authenRequest.getUsername()).orElseThrow(() ->
                 new AppException(ErrorCode.USER_NOT_EXISTED));
         boolean authenticated = passwordEncoder.matches(authenRequest.getPassword(), user.getPassword());
 
@@ -55,7 +68,7 @@ public class AuthenticationServiceImpl implements IAuthenticationService {
 
         var token = generateToken(user);
         return AuthenResponse.builder()
-                .token(token.token)
+                .token(token)
                 .authenticated(true)
                 .build();
     }
@@ -86,7 +99,7 @@ public class AuthenticationServiceImpl implements IAuthenticationService {
         }
     }
 
-    private TokenInfo generateToken(User user){
+    private String generateToken(User user){
 
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
         Date issueTime = new Date();
@@ -95,7 +108,7 @@ public class AuthenticationServiceImpl implements IAuthenticationService {
                 .toEpochMilli());
         //các data trong body gọi là claimset
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
-                .subject(user.getFull_name()) // đại diện cho user đăng nhập
+                .subject(user.getUsername()) // đại diện cho user đăng nhập
                 .issuer("tien") // thường  là domain service
                 .issueTime(issueTime) //Lấy thời điểm hịiện tại
                 .expirationTime(expiryTime) //Thời  hạn token
@@ -111,7 +124,7 @@ public class AuthenticationServiceImpl implements IAuthenticationService {
 
         try {
             jwsObject.sign(new MACSigner(SIGNER_KEY.getBytes())); //thuật toán ký và giải mã trùng nhau https://generate-random.org/
-            return new TokenInfo(jwsObject.serialize(), expiryTime);
+            return jwsObject.serialize();
 
         } catch (JOSEException e) {
             log.error("Cannot create token", e);
@@ -135,6 +148,57 @@ public class AuthenticationServiceImpl implements IAuthenticationService {
         }
 
         return stringJoiner.toString();
+    }
+
+    public void logout(LogoutRequest request) throws ParseException, JOSEException {
+        try{
+            var signToken = verifyToken(request.getToken(), true);
+            String jit = signToken.getJWTClaimsSet().getJWTID();
+            Date expiryTime = signToken.getJWTClaimsSet().getExpirationTime();
+
+            InvalidatedToken invalidatedToken = InvalidatedToken.builder().id(jit).expiryTime(expiryTime).build();
+            invalidatedTokenRepository.save(invalidatedToken);
+        }catch (AppException e){
+            log.info("Token already expired");
+        }
+    }
+
+    public AuthenResponse refreshToken(RefreshRequest request) throws ParseException, JOSEException {
+        var signedJWT = verifyToken(request.getToken(), true);
+        var jit = signedJWT.getJWTClaimsSet().getJWTID();
+        var expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+
+        InvalidatedToken invalidatedToken = InvalidatedToken.builder().id(jit).build();
+
+        invalidatedTokenRepository.save(invalidatedToken);
+
+        var username = signedJWT.getJWTClaimsSet().getSubject();
+        var user = _userRepository.findByUsername(username).orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED));
+
+        var token = generateToken(user);
+
+        return AuthenResponse.builder().token(token).authenticated(true).build();
+    }
+
+    private SignedJWT verifyToken(String token, boolean isRefresh) throws JOSEException, ParseException{
+        JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
+        SignedJWT signedJWT = SignedJWT.parse(token);
+
+        Date expiryTime = (isRefresh)
+                ? new Date(signedJWT
+                .getJWTClaimsSet()
+                .getIssueTime()
+                .toInstant()
+                .plus(REFRESHABLE_DURATION, ChronoUnit.SECONDS)
+                .toEpochMilli()
+        ) : signedJWT.getJWTClaimsSet().getExpirationTime();
+
+        var verified = signedJWT.verify(verifier);
+
+        if(!(verified && expiryTime.after(new Date()))) throw new AppException(ErrorCode.UNAUTHENTICATED);
+
+        if(invalidatedTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID())) throw new AppException(ErrorCode.UNAUTHENTICATED);
+        return signedJWT;
     }
 
     private record TokenInfo(String token, Date expiryDate) {}
